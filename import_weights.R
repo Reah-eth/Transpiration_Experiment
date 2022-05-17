@@ -1,3 +1,12 @@
+#####################################################################################################
+### Title: Extracting weights from Phenobox
+### Author: Reah Gonzales
+### Date: 29.04.2022
+### Reah.Gonzales@usys.ethz.ch
+#####################################################################################################
+
+#### Libraries ####
+
 .libPaths("T:/R4Userlibs")
 library(dplyr)
 library(tidyverse)
