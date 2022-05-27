@@ -71,7 +71,10 @@ p <- ggplot(TR_CD %>%filter(trt=="Mara 31"),
 
 p 
 
-######## Computing NTR and FTSW ####################
+
+######## Computing Fraction of Transpired Soil Water (FTSW) ####################
+### this only make sense for the droughted plants 
+### control plants have a different final weight and to many negative values 
 getftsw_dr <- function(GEN){
   data <- Weight_fun[Weight_fun$Genotype==GEN,]
   print(dim(data))
@@ -89,48 +92,7 @@ GFSW_dro <- data.frame()
 GFSW_dro <- getftsw_dr(GEN[1])
 for (i in 2:length(GEN)){GFSW_dro <- rbind(GFSW_dro ,getftsw_dr(GEN[i]))}
 
-Weight_fun <- corrected_TR
-GEN <- unique(corrected_TR$Genotype)
-GFSW_con <- data.frame()
-GFSW_con <- getftsw_dr(GEN[1])
-for (i in 2:length(GEN)){GFSW_con <- rbind(GFSW_con ,getftsw_dr(GEN[i]))}
-
-##### make a cool publication plot ##### 
-##### look at the the FTSW FOR ALL DROUGHTED PLANTS ##### 
-
-p <- ggplot(GFSW_dro%>%filter(daily_FTSW > 0),
-            aes(recording_day,daily_FTSW)) +
-  geom_point(aes(shape=trt),size=7) + 
-  ylim(0,1)+
-  theme_cowplot()+
-  scale_color_viridis_d() +
-  theme(legend.position="none")+
-  labs(x = "Date", y = "FTSW")+
-  theme(axis.text=element_text(size=24),
-        axis.title=element_text(size=30))
-p 
-ggsave(p, 
-       filename = "C:/Users/rgonzales/Desktop/transpiration_experiment 2022/figures/sub_set_FTSW.png", 
-       bg = "transparent", width = 48,height = 38,units = "cm")
-
-
-p <- ggplot(GFSW_dro%>%filter(daily_FTSW > 0),
-            aes(recording_day,daily_FTSW)) +
-  geom_point(aes(colour=trt),size=2.5) + 
-  ylim(0,1)+
-  theme_cowplot()+
-  scale_color_viridis_d() +
-  theme(legend.position="none")+
-  labs(x = "Date", y = "FTSW")+
-  facet_wrap(.~trt, scales="free")
-p 
-
-ggsave(p, 
-         filename = "C:/Users/rgonzales/Desktop/transpiration_experiment 2022/figures/facet_FTSW.png", 
-       bg = "transparent", width = 48,height = 38,units = "cm")
-
-
-################ merge the FTSW and TR data sets ###################
+################ merge the FTSW and Tanspiration Ratio data sets ###################
 
 #### 1st get a mean FTSW and TSW values for each genotype 
 #### this only makes sense for the droughted pots 
@@ -143,39 +105,27 @@ Drought_mean_FTSW <- GFSW_dro%>%group_by(recording_day,trt)%>%
   distinct(.keep_all= TRUE)%>%
   ungroup
 
-###### merge the data sets 
+###### merge the data sets ###############
 
 TR_FTSW <- merge(Drought_mean_FTSW,TR_CD)
 
-########## make a plot to look at the data ##############
+######## now calculate the normalized transpiration rate (NTR) #############
+####### this is a normalization function, it also save the slope and plateu/lower range [b and e] 
 
-p <- ggplot(TR_FTSW %>%filter(mean_TR_drought < 50),
-            aes(mean_FTSW,mean_TR_drought)) +
-  geom_point(size=1.5) + 
-  theme_cowplot()+
-  scale_color_viridis_d() +
-  theme(legend.position="none")+
-  labs(x = "Date", y = "weight [g]")
-
-p 
-
-######## now calculate the normalized transpiration rate #############
-
-####### this is a normalization function 
-
-min_max_norm <- function(x) {
-  (x - min(x)) / (max(x) - min(x))
-}
- 
 getNTR <- function(GEN){
   data <- TR_NTR[TR_NTR$trt==GEN,]
   print(dim(data))
-  data$NTR <- log10(data$rel_TR)
-  plot(data$mean_FTSW,data$NTR)
+  fit <-  drm(rel_TR~mean_FTSW, data = data[data$rel_TR < 3,], 
+              fct = LL.4(fixed = c(NA, 0, 2, NA)),
+              control = drmc(errorm=FALSE))
+  data$NTR <- predict(fit,data)
+  plot(fit)
+  plot(data$mean_FTSW,data$rel_TR)
+  data$b <- fit$coefficients[1]
+  data$e <- fit$coefficients[2]
+  print(summary(fit))
   return(data)
 }
-
-1.05/(1+2.5*exp(-9*(data$mean_FTSW)))
 
 TR_NTR <- TR_FTSW
 TR_NTR$rel_TR <- TR_NTR$mean_TR_drought/TR_NTR$mean_TR_con
@@ -183,39 +133,4 @@ GEN <- unique(TR_FTSW$trt)
 NTR <- data.frame()
 NTR <- getNTR(GEN[1])
 for (i in 2:length(GEN)){NTR <- rbind(NTR ,getNTR(GEN[i]))}
-
-##### plot all of the data 
-
-NTR$NTR <- 1.05/(1+2.5*exp(-9*(NTR$mean_FTSW)))
-
-p <- ggplot(NTR%>%filter(NTR < 1 ),
-            aes(mean_FTSW,NTR)) +
-  xlim(1,0)+
-  geom_point(aes(shape=trt),size=7) + 
-  theme_cowplot()+
-  scale_color_viridis_d() +
-  theme(legend.position="TOP")+
-  labs(x = "FTSW", y = "NTR [log10]")+
-  theme(axis.text=element_text(size=24),
-        axis.title=element_text(size=30))
-p
-ggsave(p, 
-       filename = "C:/Users/rgonzales/Desktop/transpiration_experiment 2022/figures/sub_set_NTR_FTSW.png", 
-       bg = "transparent", width = 48,height = 38,units = "cm")
-
-
-p <- ggplot(NTR%>%filter(NTR < 1 ),
-            aes(mean_FTSW,NTR)) +
-  xlim(1,0)+
-  geom_point(aes(colour=trt),size=2.5) + 
-  theme_cowplot()+
-  scale_color_viridis_d() +
-  theme(legend.position="none")+
-  labs(x = "FTSW", y = "NTR [log10]")+
-  facet_wrap(.~trt, scales="free")
-p 
-
-ggsave(p, 
-       filename = "C:/Users/rgonzales/Desktop/transpiration_experiment 2022/figures/facet_NTR_FTSW.png", 
-       bg = "transparent", width = 48,height = 38,units = "cm")
 
