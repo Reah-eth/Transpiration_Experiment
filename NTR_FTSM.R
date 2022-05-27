@@ -2,7 +2,7 @@
 ###### Title: Combine leaf area and weight measurements
 ###### Description: Combine and analyze the leaf area and weight data from the transpiration experiment
 ###### Author: Reah Gonzales
-###### Date: 19:05:2022
+###### Date: 19.05.2022
 ### Reah.Gonzales@usys.ethz.ch
 ###########################################################################################
 
