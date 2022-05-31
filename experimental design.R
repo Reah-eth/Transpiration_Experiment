@@ -38,24 +38,21 @@ write_xlsx(book,"Out/LF400_split_plot.xlsx")
 barcode <-  book[order(book$code),]
 write_xlsx(barcode,"Out/LF400_split_plot_barcodes.xlsx")
 
-#### Plot the final design 
+######## here we plot the experimental design ###############
 
-book$idx <-  str_c(substr(book$plots,2,3),book$splots)
+LF_400_split_plot <- read_xlsx("Out/LF400_split_plot.xlsx")
 
-indexes <- data.frame(idx=levels(as.factor(book$idx)),
-                      r=rep(c(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-                              2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-                              3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-                              4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
-                              5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
-                              6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-                              7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-                              8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-                              9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
-                              10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10),
-                            length.out=200),c=rep(1:20,length.out=200))
+#### this creates an unique indentification code for each pot 
+LF_400_split_plot$index <-   levels(as.factor(paste(row.names(LF_400_split_plot))))
 
-designplt <- full_join(book,indexes)
+##### there are a total of 1264 pots in this experiment each row can have only 10 plants, therefore we need 127 columns 
+indexes <- data.frame(index=levels(as.factor(LF_400_split_plot$index)),
+                      r=rep(c(rep(1,127),rep(2,127),rep(3,127),rep(4,127),
+                              rep(5,127),rep(6,127),rep(7,127),rep(8,127),
+                              rep(9,127),rep(10,127)),
+                            length.out=1264),c=rep(1:127,length.out=1264))
+
+designplt <- full_join(LF_400_split_plot,indexes)
 
 d <- ggplot(designplt)
 d <- d + geom_rect(aes(xmin=as.numeric(c)-.5,xmax=as.numeric(c)+.5,
@@ -66,6 +63,9 @@ d <- d + geom_text(aes(x=as.numeric(c),y=as.numeric(r),label=trt2,angle = 90),
 d <- d + geom_text(aes(x=as.numeric(c),y=as.numeric(r),label=code,angle = 90),
                    nudge_x=.25,size=1.9,hjust = 0.25,nudge_y=-0.25)
 #d <- d + facet_wrap(~block,ncol = 2)
-d <- d + labs(title = "Transpiration Experiment Janurary 2022 [Split plot] ",y="Rows",x="Columns")
+d <- d + labs(title = "Transpiration Experiment June 2022 [Split plot] ",y="Rows",x="Columns")
 d <- d + theme_set(theme_cowplot())
 d
+
+ggsave(d, filename = "Out/Experimental_design_Jun2022.png", 
+       bg = "transparent", width = 98,height = 28,units = "cm")
