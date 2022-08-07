@@ -1,0 +1,36 @@
+#############################################################################################################################
+###### Author: Reah Gonzales
+#####  Date:07-08-2022
+#####  email: reah.gonzales@usys.ethz.ch 
+###### Description: This is used to extract the meta data from the photographs 
+###### taken using the phenobox, or any photographs. Here I also rearrange the photographs into folders according to camera 
+#############################################################################################################################
+
+##  This code can be executed in the command line 
+
+##  Change your working directory to the where the images are located 
+
+cd /location/of/images
+
+## find and extract the image description, {the plant weight is part of the description}
+
+exiftool -T -FileName -ImageDescription -r . | sed `s/weight_g:/,/g` > targetflie.txt 
+
+##  move all the photos into a 1 folder this makes it easier to analyze 
+
+  *** BEFORE YOU DO THIS MAKE SURE TO MAKE A SAFETY COPY OF YOUR PHOTOS ***
+
+mkdir images1 
+
+find . -type f -name "*.tif" -exec mv "{}" images1 \;
+
+
+############ Seperate the images according to the camera 
+
+--- mkdir cam1
+--- mkdir cam2
+--- mkdir cam3 
+
+########### do this outside the images folder 
+
+find . -type f -name *_cam3_* -exec mv "{}" Cam3 \; 
