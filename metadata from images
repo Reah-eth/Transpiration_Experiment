@@ -12,11 +12,7 @@
 
 cd /location/of/images
 
-## find and extract the image description, {the plant weight is part of the description}
-
-exiftool -T -FileName -ImageDescription -r . | sed `s/weight_g:/,/g` > targetflie.txt 
-
-##  move all the photos into a 1 folder this makes it easier to analyze 
+#  move all the photos into a 1 folder this makes it easier to analyze 
 
   *** BEFORE YOU DO THIS MAKE SURE TO MAKE A SAFETY COPY OF YOUR PHOTOS ***
 
@@ -34,3 +30,9 @@ find . -type f -name "*.tif" -exec mv "{}" images1 \;
 ########### do this outside the images folder 
 
 find . -type f -name *_cam3_* -exec mv "{}" Cam3 \; 
+
+## find and extract the image description, {the plant weight is part of the description}
+## do this part directly in the cam1, cam2 or cam3 folders 
+
+exiftool -T -FileName -ImageDescription -r . | sed `s/weight_g:/,/g` > targetflie.txt 
+
