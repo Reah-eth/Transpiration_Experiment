@@ -16,11 +16,6 @@ cd /location/of/images
 
   *** BEFORE YOU DO THIS MAKE SURE TO MAKE A SAFETY COPY OF YOUR PHOTOS ***
 
-mkdir images1 
-
-find . -type f -name "*.tif" -exec mv "{}" images1 \;
-
-
 ############ Seperate the images according to the camera 
 
 --- mkdir cam1
